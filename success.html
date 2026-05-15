@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Max it - Application Received</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --orange: #FF7900; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #f0f4f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .app-container { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; background-color: white; display: flex; flex-direction: column; border-radius: 40px; border: 8px solid #000; overflow: hidden; }
+        .header { background: var(--orange); color: white; padding: 20px; text-align: center; font-weight: 800; font-size: 20px; }
+        .content { padding: 40px 25px; flex-grow: 1; text-align: center; }
+        .success-icon { font-size: 60px; color: #22c55e; margin-bottom: 20px; }
+        h2 { font-size: 24px; margin-bottom: 10px; }
+        .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin: 20px 0; text-align: left; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+        .ref-id { color: var(--orange); font-weight: 800; }
+        .btn-dash { width: 100%; background: var(--orange); color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 800; cursor: pointer; text-decoration: none; display: block; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">MaxIt</div>
+        <div class="content">
+            <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <h2>Application Received!</h2>
+            <p style="color: #64748b; font-size: 14px;">We have successfully received your loan request. Our team is currently reviewing your details.</p>
+            <div class="summary-card">
+                <div class="summary-row"><span>Date:</span><span id="date">May 14, 2026</span></div>
+                <div class="summary-row"><span>Reference ID:</span><span class="ref-id">MAX-8472910</span></div>
+            </div>
+            <a href="index.html" class="btn-dash">Back to Dashboard</a>
+        </div>
+    </div>
+    <script>
+        document.getElementById('date').innerText = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    </script>
+</body>
+</html>

